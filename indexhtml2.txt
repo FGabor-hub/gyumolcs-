@@ -1,0 +1,534 @@
+
+
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gyümölcsnapló</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #fff7ed, #f0fdf4);
+  color: #243026;
+}
+
+.container {
+  max-width: 1050px;
+  margin: auto;
+  padding: 32px 20px 50px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 3rem;
+}
+
+header p {
+  color: #66736a;
+}
+
+/* Összesítő */
+.summary {
+  background: white;
+  border-radius: 24px;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(40,60,45,.1);
+}
+
+.number {
+  font-size: 3.5rem;
+  font-weight: bold;
+}
+
+.label {
+  color: #69756d;
+}
+
+.bar {
+  height: 14px;
+  background: #e8eee9;
+  border-radius: 20px;
+  margin: 20px 0 8px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #63b35b, #f0b84b);
+  transition: width .3s;
+}
+
+.goal {
+  color: #66736a;
+}
+
+/* Gyümölcsök */
+h2 {
+  text-align: center;
+  margin: 30px 0 18px;
+}
+
+.fruits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.fruit {
+  border: none;
+  background: white;
+  border-radius: 20px;
+  padding: 18px 12px;
+  cursor: pointer;
+  box-shadow: 0 7px 22px rgba(40,60,45,.09);
+  transition: transform .15s, box-shadow .15s;
+}
+
+.fruit:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(40,60,45,.15);
+}
+
+.fruit:active {
+  transform: scale(.97);
+}
+
+.fruit img {
+  width: 105px;
+  height: 105px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  margin: auto;
+}
+
+.fruit-name {
+  font-weight: bold;
+  font-size: 1.05rem;
+  margin-top: 10px;
+}
+
+.portion {
+  color: #758078;
+  font-size: .85rem;
+  margin-top: 4px;
+}
+
+.count {
+  margin-top: 9px;
+  font-weight: bold;
+  color: #4b8c45;
+}
+
+/* Mai fogyasztás */
+.today {
+  margin-top: 30px;
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 7px 22px rgba(40,60,45,.08);
+}
+
+.today-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf1ee;
+}
+
+.empty {
+  text-align: center;
+  color: #7a847d;
+}
+
+.reset {
+  display: block;
+  margin: 20px auto 0;
+  border: none;
+  background: #243026;
+  color: white;
+  padding: 11px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.reset:hover {
+  background: #3b4a3e;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>🍎 Gyümölcsnapló</h1>
+    <p>Kattints a gyümölcs képére, és vezesd a mai fogyasztásodat!</p>
+  </header>
+
+  <!-- Napi összesítő -->
+  <section class="summary">
+
+    <div class="number" id="total">0</div>
+
+    <div class="label">
+      adag gyümölcs ma
+    </div>
+
+    <div class="bar">
+      <div class="fill" id="fill"></div>
+    </div>
+
+    <div class="goal">
+      Napi cél: 5 adag
+    </div>
+
+  </section>
+
+
+  <h2>Válassz gyümölcsöt</h2>
+
+  <main class="fruits" id="fruits"></main>
+
+
+  <!-- Mai fogyasztás -->
+  <section class="today">
+
+    <h2 style="margin-top:0">
+      Mai fogyasztás
+    </h2>
+
+    <div id="log">
+      <div class="empty">
+        Még nem választottál gyümölcsöt.
+      </div>
+    </div>
+
+    <button class="reset" onclick="resetDay()">
+      Mai nap törlése
+    </button>
+
+  </section>
+
+</div>
+
+
+<script>
+
+/* Gyümölcsök adatai */
+
+const fruits = [
+
+  {
+    name: "Alma",
+    emoji: "🍎",
+    grams: 150
+  },
+
+  {
+    name: "Banán",
+    emoji: "🍌",
+    grams: 120
+  },
+
+  {
+    name: "Narancs",
+    emoji: "🍊",
+    grams: 150
+  },
+
+  {
+    name: "Eper",
+    emoji: "🍓",
+    grams: 150
+  },
+
+  {
+    name: "Szőlő",
+    emoji: "🍇",
+    grams: 100
+  },
+
+  {
+    name: "Görögdinnye",
+    emoji: "🍉",
+    grams: 200
+  },
+
+  {
+    name: "Körte",
+    emoji: "🍐",
+    grams: 150
+  },
+
+  {
+    name: "Őszibarack",
+    emoji: "🍑",
+    grams: 150
+  },
+
+  {
+    name: "Ananász",
+    emoji: "🍍",
+    grams: 150
+  },
+
+  {
+    name: "Kiwi",
+    emoji: "🥝",
+    grams: 100
+  },
+
+  {
+    name: "Cseresznye",
+    emoji: "🍒",
+    grams: 100
+  },
+
+  {
+    name: "Mangó",
+    emoji: "🥭",
+    grams: 150
+  }
+
+];
+
+
+/* Adatok betöltése */
+
+const storageKey = "gyumolcsnaplo";
+
+let data =
+  JSON.parse(localStorage.getItem(storageKey) || "{}");
+
+
+/* Adatok mentése */
+
+function save() {
+
+  localStorage.setItem(
+    storageKey,
+    JSON.stringify(data)
+  );
+
+}
+
+
+/* Gyümölcs hozzáadása */
+
+function addFruit(name) {
+
+  if (!data[name]) {
+    data[name] = 0;
+  }
+
+  data[name]++;
+
+  save();
+
+  render();
+
+}
+
+
+/* Mai nap törlése */
+
+function resetDay() {
+
+  if (
+    confirm(
+      "Biztosan törlöd a mai fogyasztást?"
+    )
+  ) {
+
+    data = {};
+
+    save();
+
+    render();
+
+  }
+
+}
+
+
+/* Emoji képpé alakítása */
+
+function emojiImage(emoji) {
+
+  const svg = `
+
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="240"
+    height="240"
+  >
+
+    <rect
+      width="100%"
+      height="100%"
+      rx="120"
+      fill="#f4f7f2"
+    />
+
+    <text
+      x="50%"
+      y="55%"
+      text-anchor="middle"
+      dominant-baseline="middle"
+      font-size="120"
+    >
+      ${emoji}
+    </text>
+
+  </svg>
+
+  `;
+
+  return (
+    "data:image/svg+xml;charset=UTF-8," +
+    encodeURIComponent(svg)
+  );
+
+}
+
+
+/* Oldal frissítése */
+
+function render() {
+
+  const fruitsElement =
+    document.getElementById("fruits");
+
+
+  /* Gyümölcskártyák */
+
+  fruitsElement.innerHTML =
+    fruits.map(fruit => `
+
+      <button
+        class="fruit"
+        onclick="addFruit('${fruit.name}')"
+      >
+
+        <img
+          src="${emojiImage(fruit.emoji)}"
+          alt="${fruit.name}"
+        >
+
+        <div class="fruit-name">
+          ${fruit.name}
+        </div>
+
+        <div class="portion">
+          kb. ${fruit.grams} g / adag
+        </div>
+
+        <div class="count">
+          ${data[fruit.name] || 0} adag
+        </div>
+
+      </button>
+
+    `).join("");
+
+
+  /* Összes adag */
+
+  const total =
+    Object.values(data)
+      .reduce(
+        (sum, value) => sum + value,
+        0
+      );
+
+
+  document.getElementById("total")
+    .textContent = total;
+
+
+  /* Haladási sáv */
+
+  const percentage =
+    Math.min(
+      total / 5 * 100,
+      100
+    );
+
+  document.getElementById("fill")
+    .style.width =
+      percentage + "%";
+
+
+  /* Mai lista */
+
+  const log =
+    document.getElementById("log");
+
+
+  const entries =
+    Object.entries(data)
+      .filter(
+        ([name, count]) => count > 0
+      );
+
+
+  if (entries.length === 0) {
+
+    log.innerHTML = `
+      <div class="empty">
+        Még nem választottál gyümölcsöt.
+      </div>
+    `;
+
+  } else {
+
+    log.innerHTML =
+      entries.map(
+        ([name, count]) => `
+
+          <div class="today-row">
+
+            <span>
+              ${name}
+            </span>
+
+            <strong>
+              ${count} adag
+            </strong>
+
+          </div>
+
+        `
+      ).join("");
+
+  }
+
+}
+
+
+/* Első betöltés */
+
+render();
+
+</script>
+
+</body>
+</html>
+```
+
